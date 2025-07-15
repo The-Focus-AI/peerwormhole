@@ -2,6 +2,11 @@
 
 A collection of peer-to-peer applications demonstrating the capabilities of NodePeer, built with PeerJS for both Node.js and web environments.
 
+## Docker build
+
+docker buildx build --platform linux/x86_64 -t node-peerjs -f Dockerfile .
+
+
 ## Features
 
 ### File Transfer
