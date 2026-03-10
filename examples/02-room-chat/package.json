@@ -1,0 +1,14 @@
+{
+  "name": "@peerwormhole-examples/room-chat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cli": "node src/cli.js",
+    "web": "node src/serve.js",
+    "dev": "node src/serve.js"
+  },
+  "dependencies": {
+    "@roamhq/wrtc": "^0.9.0",
+    "peerjs": "^1.5.4"
+  }
+}

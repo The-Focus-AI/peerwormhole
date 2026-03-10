@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01 Direct Chat</title>
+    <link rel="stylesheet" href="/shared/web/base.css">
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p class="pill">Example 01</p>
+        <h1>Direct Chat</h1>
+        <p>One browser or one CLI connects directly to one peer. No rooms, no files, just the basic path working cleanly.</p>
+      </section>
+
+      <section class="grid two">
+        <div class="panel stack">
+          <div class="row">
+            <div class="pill"><span id="statusDot" class="status-dot"></span> <span id="statusText">Starting peer...</span></div>
+            <div class="pill">Your ID: <strong id="peerId">pending</strong></div>
+          </div>
+
+          <form id="messageForm" class="stack">
+            <div class="messages stack" id="messages"></div>
+            <div class="row">
+              <input id="messageInput" type="text" placeholder="Type a direct message">
+              <button type="submit">Send</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel stack">
+          <label class="stack">
+            <span class="muted">Display name</span>
+            <input id="nameInput" type="text" value="Browser Operator">
+          </label>
+
+          <label class="stack">
+            <span class="muted">Peer ID to connect</span>
+            <input id="targetInput" type="text" placeholder="Paste a browser or CLI peer ID">
+          </label>
+
+          <div class="row">
+            <button id="startButton" type="button">Start browser peer</button>
+            <button id="connectButton" class="secondary" type="button">Connect</button>
+          </div>
+
+          <div class="stack">
+            <div class="muted">Active target</div>
+            <div id="activePeer" class="peer-chip">No peer selected</div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/vendor/peerjs.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+  </html>

@@ -1,0 +1,177 @@
+import { BridgeClient } from '/shared/web/bridge-client.js';
+
+const dom = {
+  channels: document.querySelector('#channels'),
+  connectButton: document.querySelector('#connectButton'),
+  currentChannel: document.querySelector('#currentChannel'),
+  downloads: document.querySelector('#downloads'),
+  fileInput: document.querySelector('#fileInput'),
+  messageForm: document.querySelector('#messageForm'),
+  messageInput: document.querySelector('#messageInput'),
+  messages: document.querySelector('#messages'),
+  peerId: document.querySelector('#peerId'),
+  peers: document.querySelector('#peers'),
+  targetInput: document.querySelector('#targetInput'),
+  userName: document.querySelector('#userName')
+};
+
+const client = new BridgeClient();
+let currentState = null;
+
+function systemMessage(text) {
+  const article = document.createElement('article');
+  article.className = 'message system';
+  article.innerHTML = `
+    <div class="meta">${new Date().toLocaleTimeString()} • System</div>
+    <div>${text}</div>
+  `;
+  dom.messages.append(article);
+  dom.messages.scrollTop = dom.messages.scrollHeight;
+}
+
+function renderChannels() {
+  dom.channels.innerHTML = '';
+  for (const channel of currentState?.channels || []) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `channel-chip ${channel === currentState.currentChannel ? 'active' : ''}`;
+    button.textContent = `#${channel}`;
+    button.addEventListener('click', async () => {
+      await client.setChannel(channel);
+    });
+    dom.channels.append(button);
+  }
+}
+
+function renderMessages() {
+  dom.messages.innerHTML = '';
+  const channel = currentState?.currentChannel || 'general';
+  const entries = (currentState?.history || []).filter((entry) => (entry.channel || 'general') === channel);
+
+  for (const entry of entries) {
+    const article = document.createElement('article');
+    article.className = `message ${entry.kind === 'system' ? 'system' : ''}`;
+    let body = `<div>${entry.text}</div>`;
+    if (entry.file?.url) {
+      body += `<div><a class="file-link" href="${entry.file.url}" download="${entry.file.name}">Download ${entry.file.name}</a></div>`;
+    }
+    article.innerHTML = `
+      <div class="meta">${new Date(entry.sentAt).toLocaleTimeString()} • ${entry.user?.name || 'System'}</div>
+      ${body}
+    `;
+    dom.messages.append(article);
+  }
+
+  dom.messages.scrollTop = dom.messages.scrollHeight;
+}
+
+function renderPeers() {
+  dom.peers.innerHTML = '';
+  const peers = currentState?.peers || [];
+  if (peers.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'peer-chip';
+    empty.textContent = 'No peers connected';
+    dom.peers.append(empty);
+    return;
+  }
+
+  for (const peer of peers) {
+    const item = document.createElement('div');
+    item.className = 'peer-chip';
+    item.textContent = `${peer.user?.name || 'Unknown'} (${peer.peerId})`;
+    dom.peers.append(item);
+  }
+}
+
+function renderDownloads() {
+  dom.downloads.innerHTML = '';
+  const channel = currentState?.currentChannel || 'general';
+  const files = (currentState?.files || []).filter((file) => (file.channel || 'general') === channel);
+  if (files.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'peer-chip';
+    empty.textContent = 'No channel files yet';
+    dom.downloads.append(empty);
+    return;
+  }
+
+  for (const file of files) {
+    const item = document.createElement('a');
+    item.className = 'peer-chip';
+    item.href = file.url;
+    item.download = file.name;
+    item.textContent = `${file.name} • ${file.receivedFrom}`;
+    dom.downloads.append(item);
+  }
+}
+
+function renderState(state) {
+  currentState = state;
+  dom.peerId.textContent = state.peerId || 'pending';
+  dom.userName.textContent = state.user?.name || 'pending';
+  dom.currentChannel.textContent = `#${state.currentChannel || 'general'}`;
+  renderChannels();
+  renderMessages();
+  renderPeers();
+  renderDownloads();
+}
+
+async function handleComposer(value) {
+  if (value.startsWith('/connect ')) {
+    await client.connect(value.slice('/connect '.length).trim());
+    return;
+  }
+
+  if (value.startsWith('/join ')) {
+    await client.setChannel(value.slice('/join '.length).trim().replace(/^#/, ''));
+    return;
+  }
+
+  if (value === '/channels') {
+    systemMessage(`Available channels: ${(currentState?.channels || []).map((channel) => `#${channel}`).join(', ')}`);
+    return;
+  }
+
+  await client.sendChat(value, currentState?.currentChannel || 'general');
+}
+
+client.on('state', (state) => renderState(state));
+client.on('history', (history) => {
+  currentState = { ...(currentState || {}), history };
+  renderMessages();
+});
+client.on('files', (files) => {
+  currentState = { ...(currentState || {}), files };
+  renderDownloads();
+});
+
+dom.connectButton.addEventListener('click', async () => {
+  const peerId = dom.targetInput.value.trim();
+  if (!peerId) {
+    return;
+  }
+  await client.connect(peerId);
+  dom.targetInput.value = '';
+});
+
+dom.messageForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const value = dom.messageInput.value.trim();
+  if (!value) {
+    return;
+  }
+  await handleComposer(value);
+  dom.messageInput.value = '';
+});
+
+dom.fileInput.addEventListener('change', async (event) => {
+  const [file] = event.target.files;
+  if (!file) {
+    return;
+  }
+  await client.uploadFile(file, currentState?.currentChannel || 'general');
+  dom.fileInput.value = '';
+});
+
+await client.start();

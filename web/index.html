@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peerwormhole</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Static Web Companion</p>
+        <h1>Send or receive a file with a spoken code, URL, or QR.</h1>
+        <p class="lede">The browser and CLI use the same PeerJS/WebRTC flow. Start a send session, read the phrase aloud, or scan the QR to receive.</p>
+      </section>
+
+      <section class="layout">
+        <article class="panel stack">
+          <div class="row between">
+            <div>
+              <div class="eyebrow">Peer status</div>
+              <div id="statusText" class="status">Starting peer...</div>
+            </div>
+            <button id="restartButton" class="secondary" type="button">Restart peer</button>
+          </div>
+
+          <label class="stack">
+            <span>Your display name</span>
+            <input id="nameInput" type="text" value="Browser Courier">
+          </label>
+
+          <div class="meta-grid">
+            <div>
+              <span class="muted">Peer ID</span>
+              <div id="peerId" class="mono">pending</div>
+            </div>
+            <div>
+              <span class="muted">Web URL base</span>
+              <div id="webBase" class="mono">pending</div>
+            </div>
+          </div>
+
+          <div id="events" class="events"></div>
+        </article>
+
+        <article class="panel stack">
+          <div class="row between">
+            <div>
+              <div class="eyebrow">Send</div>
+              <h2>Generate a code</h2>
+            </div>
+            <label class="buttonlike">
+              <input id="sendFileInput" type="file" hidden>
+              Choose file
+            </label>
+          </div>
+
+          <div id="sendMeta" class="muted">Choose a file to start a share session.</div>
+
+          <div class="field">
+            <span class="muted">Share code</span>
+            <textarea id="shareCode" readonly></textarea>
+          </div>
+
+          <div class="field">
+            <span class="muted">Spoken phrase</span>
+            <textarea id="sharePhrase" readonly></textarea>
+          </div>
+
+          <div class="field">
+            <span class="muted">Share URL</span>
+            <textarea id="shareUrl" readonly></textarea>
+          </div>
+
+          <div class="qr-wrap">
+            <img id="shareQr" alt="Share QR code">
+          </div>
+        </article>
+
+        <article class="panel stack">
+          <div class="row between">
+            <div>
+              <div class="eyebrow">Receive</div>
+              <h2>Paste or scan</h2>
+            </div>
+            <button id="scanButton" class="secondary" type="button">Scan QR</button>
+          </div>
+
+          <label class="stack">
+            <span>Share code, phrase, or URL</span>
+            <textarea id="receiveInput" placeholder="Paste a code, phrase, or URL"></textarea>
+          </label>
+
+          <div class="row">
+            <button id="connectButton" type="button">Connect to sender</button>
+            <button id="acceptButton" class="secondary" type="button" disabled>Accept</button>
+            <button id="rejectButton" class="secondary" type="button" disabled>Reject</button>
+          </div>
+
+          <div id="offerMeta" class="muted">No share offer yet.</div>
+          <div id="receiveProgress" class="muted">Waiting for sender.</div>
+          <a id="downloadLink" class="download-link hidden" download>Download file</a>
+
+          <div id="scannerPanel" class="scanner hidden">
+            <video id="scannerVideo" playsinline muted></video>
+            <div id="scannerStatus" class="muted">Camera idle.</div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="./vendor/peerjs.min.js"></script>
+    <script src="./vendor/qrcode-browser.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+  </html>

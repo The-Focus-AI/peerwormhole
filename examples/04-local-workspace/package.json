@@ -1,0 +1,14 @@
+{
+  "name": "@peerwormhole-examples/local-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cli": "node src/cli.js",
+    "web": "node src/web.js",
+    "dev": "node src/web.js"
+  },
+  "dependencies": {
+    "@roamhq/wrtc": "^0.9.0",
+    "peerjs": "^1.5.4"
+  }
+}

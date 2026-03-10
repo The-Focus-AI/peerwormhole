@@ -42,4 +42,5 @@ temp/
 .debug/
 
 # Output directory for file transfers
-output/ 
+output/
+downloads/

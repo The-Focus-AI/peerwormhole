@@ -1,14 +1,33 @@
 {
-  "name": "node-peerjs",
+  "name": "peerwormhole",
   "version": "1.0.0",
-  "description": "A Node.js PeerJS peer implementation using node-webrtc",
+  "description": "Wormhole-style file sharing over PeerJS/WebRTC",
   "type": "module",
   "main": "src-js/index.js",
+  "bin": {
+    "peerwormhole": "./bin/peerwormhole.js",
+    "peerdrop": "./bin/peerwormhole.js"
+  },
   "scripts": {
     "test": "node tests/test.js",
-    "start": "node src-js/examples/file-transfer.js"
+    "start": "node bin/peerwormhole.js web",
+    "share:send": "node bin/peerwormhole.js send",
+    "share:receive": "node bin/peerwormhole.js receive",
+    "share:web": "node bin/peerwormhole.js web",
+    "share:web:export": "node bin/peerwormhole.js web:export",
+    "example:01:cli": "node examples/01-direct-chat/src/cli.js",
+    "example:01:web": "node examples/01-direct-chat/src/serve.js",
+    "example:02:cli": "node examples/02-room-chat/src/cli.js",
+    "example:02:web": "node examples/02-room-chat/src/serve.js",
+    "example:03:cli": "node examples/03-file-share/src/cli.js",
+    "example:03:web": "node examples/03-file-share/src/serve.js",
+    "example:04:cli": "node examples/04-local-workspace/src/cli.js",
+    "example:04:web": "node examples/04-local-workspace/src/web.js",
+    "example:05:cli": "node examples/05-slack-lite/src/cli.js",
+    "example:05:web": "node examples/05-slack-lite/src/web.js"
   },
   "keywords": [
+    "wormhole",
     "webrtc",
     "peerjs",
     "node"
@@ -17,6 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "@roamhq/wrtc": "^0.9.0",
-    "peerjs": "^1.5.4"
+    "peerjs": "^1.5.4",
+    "qrcode": "^1.5.4"
   }
 }

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02 Room Chat</title>
+    <link rel="stylesheet" href="/shared/web/base.css">
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p class="pill">Example 02</p>
+        <h1>Room Chat</h1>
+        <p>This one keeps the same browser and CLI protocol, but every connection participates in a shared room feed.</p>
+      </section>
+
+      <section class="grid two">
+        <div class="panel stack">
+          <div class="row">
+            <div class="pill"><span id="statusDot" class="status-dot"></span> <span id="statusText">Starting room peer...</span></div>
+            <div class="pill">Your ID: <strong id="peerId">pending</strong></div>
+          </div>
+
+          <form id="messageForm" class="stack">
+            <div class="messages stack" id="messages"></div>
+            <div class="row">
+              <input id="messageInput" type="text" placeholder="Broadcast a room message">
+              <button type="submit">Send to room</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel stack">
+          <label class="stack">
+            <span class="muted">Display name</span>
+            <input id="nameInput" type="text" value="Room Browser">
+          </label>
+
+          <label class="stack">
+            <span class="muted">Peer ID to connect</span>
+            <input id="targetInput" type="text" placeholder="Paste a peer ID to join the room">
+          </label>
+
+          <div class="row">
+            <button id="startButton" type="button">Restart peer</button>
+            <button id="connectButton" class="secondary" type="button">Join peer</button>
+          </div>
+
+          <div class="stack">
+            <div class="muted">Connected peers</div>
+            <div id="peers" class="sidebar-list stack"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/vendor/peerjs.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+  </html>

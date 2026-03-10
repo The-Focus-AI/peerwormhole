@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05 Slack Lite</title>
+    <link rel="stylesheet" href="/shared/web/base.css">
+    <style>
+      .workspace {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 240px minmax(0, 1fr) 280px;
+      }
+
+      @media (max-width: 980px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p class="pill">Example 05</p>
+        <h1>Slack Lite</h1>
+        <p>Channels, files, presence, and a browser UI that rides on a local CLI peer. It is deliberately small, but it finally feels like an app.</p>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel stack">
+          <div class="pill">Operator: <strong id="userName">pending</strong></div>
+          <div class="pill">Peer ID: <strong id="peerId">pending</strong></div>
+
+          <div class="stack">
+            <div class="muted">Channels</div>
+            <div id="channels" class="stack"></div>
+          </div>
+
+          <label class="stack">
+            <span class="muted">Connect peer</span>
+            <input id="targetInput" type="text" placeholder="Paste a remote peer ID">
+          </label>
+          <button id="connectButton" type="button">Connect peer</button>
+        </aside>
+
+        <section class="panel stack">
+          <div class="row">
+            <div class="pill">Current channel: <strong id="currentChannel">#general</strong></div>
+          </div>
+
+          <div id="messages" class="messages stack"></div>
+
+          <form id="messageForm" class="row">
+            <input id="messageInput" type="text" placeholder="Say something, or use /join #ops or /connect PEER_ID">
+            <button type="submit">Send</button>
+          </form>
+        </section>
+
+        <aside class="panel stack">
+          <label class="stack">
+            <span class="muted">Upload into current channel</span>
+            <input id="fileInput" type="file">
+          </label>
+
+          <div class="stack">
+            <div class="muted">Peers</div>
+            <div id="peers" class="sidebar-list stack"></div>
+          </div>
+
+          <div class="stack">
+            <div class="muted">Downloads</div>
+            <div id="downloads" class="sidebar-list stack"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+  </html>

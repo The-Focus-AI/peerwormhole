@@ -107,18 +107,21 @@ if (util) {
 export class NodePeer extends EventEmitter {
   /**
    * Create a new NodePeer instance
-   * @param {string} [id] - Optional peer ID
+   * @param {string|{id?: string, debug?: number}} [options] - Optional peer ID or options
    */
-  constructor(id) {
+  constructor(options) {
     super();
     /** @private */
     this._id = null;
+    const normalized = typeof options === 'string'
+      ? { id: options, debug: 0 }
+      : { id: options?.id, debug: options?.debug ?? 0 };
     
     const config = {
       host: '0.peerjs.com',
       secure: true,
       port: 443,
-      debug: 3,
+      debug: normalized.debug,
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -128,7 +131,7 @@ export class NodePeer extends EventEmitter {
     };
 
     /** @private */
-    this.peer = id ? new Peer(id, config) : new Peer(config);
+    this.peer = normalized.id ? new Peer(normalized.id, config) : new Peer(config);
     this.setupEventHandlers();
   }
 
@@ -138,29 +141,15 @@ export class NodePeer extends EventEmitter {
    */
   setupEventHandlers() {
     this.peer.on('open', (id) => {
-      console.log('Peer ready with ID:', id);
       this._id = id;
       this.emit('open', id);
     });
 
     this.peer.on('error', (err) => {
-      console.error('Peer error:', err);
       this.emit('error', err);
     });
 
     this.peer.on('connection', (conn) => {
-      console.log('Received connection');
-      
-      // Handle data events directly on the connection
-      conn.on('data', (data) => {
-        console.log('Received data:', data);
-      });
-      
-      conn.on('open', () => {
-        console.log('Connection opened');
-      });
-      
-      // Emit the connection event with the prepared connection
       this.emit('connection', conn);
     });
   }
@@ -180,13 +169,32 @@ export class NodePeer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async cleanup() {
-    console.log('Starting cleanup...');
     try {
-      // Immediately destroy the peer without waiting
-      this.peer.destroy();
-      console.log('Cleanup complete');
+      if (!this.peer || this.peer.destroyed) {
+        return;
+      }
+
+      const connections = this.peer.connections || {};
+
+      for (const connectionList of Object.values(connections)) {
+        for (const connection of connectionList) {
+          try {
+            connection.dataChannel?.close?.();
+          } catch (error) {
+            this.emit('error', error);
+          }
+
+          try {
+            connection.close?.();
+          } catch (error) {
+            this.emit('error', error);
+          }
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
-      console.error('Error during cleanup:', error);
+      this.emit('error', error);
     }
   }
 

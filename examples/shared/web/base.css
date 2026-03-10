@@ -1,0 +1,223 @@
+:root {
+  --page-bg: #0e1117;
+  --panel: #151a23;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --panel-soft: #1b2230;
+  --text: #f5f7fb;
+  --muted: #9ba8c7;
+  --accent: #67e8f9;
+  --accent-strong: #22c55e;
+  --warn: #fb7185;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --font-display: "Avenir Next Condensed", "Futura", "Trebuchet MS", sans-serif;
+  --font-body: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at top left, rgba(103, 232, 249, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.14), transparent 22%),
+    linear-gradient(180deg, #0b0f15 0%, var(--page-bg) 100%);
+}
+
+main {
+  width: min(1100px, calc(100vw - 32px));
+  margin: 24px auto;
+  display: grid;
+  gap: 16px;
+}
+
+.hero,
+.panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  padding: 24px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hero p,
+.muted {
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid.two {
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+}
+
+.panel {
+  padding: 18px;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 18, 27, 0.92);
+  color: var(--text);
+  padding: 12px 14px;
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #38bdf8);
+  color: #071018;
+  font-weight: 700;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+button.ghost {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+}
+
+.messages,
+.sidebar-list {
+  max-height: 480px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.message {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.message.system {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.message .meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.message .file-link {
+  color: var(--accent);
+}
+
+.peer-chip,
+.channel-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.channel-chip.active {
+  background: rgba(103, 232, 249, 0.16);
+  border-color: rgba(103, 232, 249, 0.35);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--warn);
+}
+
+.status-dot.online {
+  background: var(--accent-strong);
+}
+
+.drop-zone {
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px dashed rgba(103, 232, 249, 0.45);
+  background: rgba(103, 232, 249, 0.05);
+  color: var(--muted);
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 860px) {
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    width: min(100vw - 24px, 1100px);
+    margin: 12px auto 24px;
+  }
+}
