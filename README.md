@@ -1,13 +1,19 @@
 # Peerwormhole
 
-`peerwormhole` is a wormhole-style file share built on PeerJS/WebRTC. It ships a CLI sender/receiver, a static browser companion that can also send and receive, and a static export path so the browser UI can be hosted on any static site.
+`peerwormhole` is a wormhole-style file share built on PeerJS/WebRTC. It ships:
+
+- a CLI sender and receiver
+- a browser companion that can send and receive
+- a static web export path for hosting the browser UI anywhere
+- share invites as a compact code, spoken phrase, URL, or QR code
+
+Current constraints:
 
 - one file per share session
 - one active receiver per sender
-- share invite exposed as a compact code, a spoken phrase, a URL, or a QR code
-- direct peer-to-peer transfer after PeerJS/WebRTC signaling
-
-The invite token currently encodes the sender peer ID directly. There is no custom rendezvous backend and no transfer relay in the data path.
+- the invite token encodes the sender peer ID directly
+- signaling uses the public PeerJS broker and STUN servers
+- file data stays peer-to-peer after signaling
 
 ## Requirements
 
@@ -19,30 +25,34 @@ The invite token currently encodes the sender peer ID directly. There is no cust
 
 ## Install
 
-```bash
-npm install
-```
-
-After install, use either the package binary or the repo scripts:
+Run it directly without installing:
 
 ```bash
 npx peerwormhole help
-npx peerdrop help
 ```
 
+Install globally if you use it often:
+
 ```bash
-npm run share:send -- ./path/to/file.pdf
-npm run share:receive -- "<share code, phrase, or URL>"
+npm install -g peerwormhole
+peerwormhole help
+```
+
+Install it into a project and use `npx`:
+
+```bash
+npm install peerwormhole
+npx peerwormhole help
 ```
 
 ## Quick Start
 
-### CLI to CLI
+### Terminal to Terminal
 
 Sender:
 
 ```bash
-npm run share:send -- ./path/to/file.pdf
+npx peerwormhole send ./path/to/file.pdf
 ```
 
 The sender prints:
@@ -55,17 +65,19 @@ The sender prints:
 Receiver:
 
 ```bash
-npm run share:receive -- "<share code, phrase, or URL>"
+npx peerwormhole receive "<share code, phrase, or URL>"
 ```
 
 The receiver prompts before accepting the file and saves into `./downloads/` by default. Use `--output-dir` to change that location.
 
-### CLI to Browser
+If you omit the invite, `receive` prompts for it interactively.
+
+### Terminal to Browser
 
 Serve the browser companion locally:
 
 ```bash
-npm start
+npx peerwormhole web
 ```
 
 Open `http://127.0.0.1:3106` and either:
@@ -80,7 +92,7 @@ When the transfer finishes, the browser exposes a download link for the received
 1. Open the web app.
 2. Choose a file in the Send panel.
 3. Copy the generated code, phrase, URL, or QR.
-4. Receive it in another browser tab or with `npm run share:receive -- "<invite>"`.
+4. Receive it in another browser tab or with `npx peerwormhole receive "<invite>"`.
 
 The sending browser tab must stay open until the transfer completes.
 
@@ -89,7 +101,7 @@ The sending browser tab must stay open until the transfer completes.
 Export a fully static copy of the browser app:
 
 ```bash
-npm run share:web:export -- ./dist/share-web
+npx peerwormhole web:export ./dist/share-web
 ```
 
 The export copies:
@@ -99,11 +111,7 @@ The export copies:
 - vendored `peerjs.min.js`
 - a bundled QR helper
 
-Serve that directory from any static host:
-
-```bash
-npx live-server ./dist/share-web
-```
+Serve that directory from any static host.
 
 If the CLI should print links for your deployed site instead of the default local URL, set:
 
@@ -117,13 +125,9 @@ The browser app itself derives its base URL from the page it is loaded from.
 
 ## Commands
 
-Binary names:
-
-- `peerwormhole`
-- `peerdrop`
-
 Available commands:
 
+- `peerwormhole help`
 - `peerwormhole send <file> [--name <name>] [--web-base-url <url>]`
 - `peerwormhole receive [code-or-url] [--name <name>] [--output-dir <dir>]`
 - `peerwormhole web [--port <port>]`
@@ -137,14 +141,7 @@ Defaults and behavior:
 - `--web-base-url` changes the URL embedded in the sender output and QR
 - only the first receiver is accepted for a given send session
 
-Useful package scripts:
-
-- `npm test`
-- `npm start`
-- `npm run share:send -- ./path/to/file.pdf`
-- `npm run share:receive -- "<invite>"`
-- `npm run share:web`
-- `npm run share:web:export -- ./dist/share-web`
+You can also pass `--help` after any command.
 
 ## Invite Formats
 
@@ -155,18 +152,37 @@ Useful package scripts:
 
 All four forms decode to the sender peer ID.
 
-## Repo Layout
+## JavaScript API
 
-- `bin/peerwormhole.js`: CLI entrypoint
-- `web/`: static browser UI
-- `lib/common/`: shared protocol, invite, and transfer logic
-- `lib/node/`: Node runtime helpers, mesh, and web export/server code
-- `lib/web/`: browser runtime helpers and mesh
-- `examples/`: step-by-step reference apps
+The package also exports a low-level `NodePeer` class for Node-side PeerJS work:
+
+```js
+import { NodePeer } from 'peerwormhole';
+
+const peer = new NodePeer();
+peer.once('open', (id) => {
+  console.log(`Ready as ${id}`);
+});
+
+// Later:
+await peer.destroy();
+```
+
+For the file-sharing workflow, prefer the CLI and web app over this low-level API.
+
+## Repository Development
+
+If you are working from a git clone instead of the published package:
+
+```bash
+npm install
+npm test
+npm start
+```
 
 ## Examples
 
-The current package entrypoint lives in `bin/peerwormhole.js`, but the earlier example ladder is still available as a reference path:
+Reference examples live in the GitHub repo:
 
 - `01-direct-chat`
 - `02-room-chat`
@@ -174,4 +190,4 @@ The current package entrypoint lives in `bin/peerwormhole.js`, but the earlier e
 - `04-local-workspace`
 - `05-slack-lite`
 
-Start with `examples/README.md` if you want the staged build-up instead of the packaged file-share tool.
+Start with <https://github.com/The-Focus-AI/peerwormhole/tree/main/examples> if you want the staged build-up instead of the packaged file-share tool.

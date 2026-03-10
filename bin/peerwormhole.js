@@ -31,6 +31,11 @@ function parseArgv(argv) {
 
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
+    if (value === '-h') {
+      options.help = true;
+      continue;
+    }
+
     if (!value.startsWith('--')) {
       positionals.push(value);
       continue;
@@ -272,7 +277,7 @@ async function main() {
   const { positionals, options } = parseArgv(process.argv.slice(2));
   const command = positionals[0];
 
-  if (!command || command === '--help' || command === 'help') {
+  if (!command || command === '--help' || command === 'help' || options.help) {
     printUsage();
     return;
   }

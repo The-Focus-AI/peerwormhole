@@ -3,6 +3,12 @@ import peerjs from 'peerjs';
 import wrtc from '@roamhq/wrtc';
 import { EventEmitter } from 'events';
 import { createRequire } from 'module';
+import { WebSocket as WsWebSocket } from 'ws';
+
+// Polyfill WebSocket for Node < 22 (PeerJS needs it for signaling)
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = WsWebSocket;
+}
 
 const require = createRequire(import.meta.url);
 const { Peer } = peerjs;
@@ -113,6 +119,8 @@ export class NodePeer extends EventEmitter {
     super();
     /** @private */
     this._id = null;
+    /** @private */
+    this._cleanupPromise = null;
     const normalized = typeof options === 'string'
       ? { id: options, debug: 0 }
       : { id: options?.id, debug: options?.debug ?? 0 };
@@ -160,6 +168,10 @@ export class NodePeer extends EventEmitter {
    * @returns {import('peerjs').DataConnection} The connection object
    */
   connect(peerId) {
+    if (!this.peer || this.peer.destroyed) {
+      throw new Error('Peer is not available. Create a new NodePeer instance.');
+    }
+
     const conn = this.peer.connect(peerId);
     return conn;
   }
@@ -169,33 +181,68 @@ export class NodePeer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async cleanup() {
-    try {
-      if (!this.peer || this.peer.destroyed) {
-        return;
-      }
+    if (this._cleanupPromise) {
+      return this._cleanupPromise;
+    }
 
-      const connections = this.peer.connections || {};
+    this._cleanupPromise = (async () => {
+      try {
+        if (!this.peer || this.peer.destroyed) {
+          this._id = null;
+          this.peer = null;
+          return;
+        }
 
-      for (const connectionList of Object.values(connections)) {
-        for (const connection of connectionList) {
-          try {
-            connection.dataChannel?.close?.();
-          } catch (error) {
-            this.emit('error', error);
-          }
+        const connections = this.peer.connections || {};
 
-          try {
-            connection.close?.();
-          } catch (error) {
-            this.emit('error', error);
+        for (const connectionList of Object.values(connections)) {
+          for (const connection of connectionList) {
+            try {
+              connection.dataChannel?.close?.();
+            } catch (error) {
+              this.emit('error', error);
+            }
+
+            try {
+              connection.close?.();
+            } catch (error) {
+              this.emit('error', error);
+            }
           }
         }
-      }
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch (error) {
-      this.emit('error', error);
-    }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        try {
+          this.peer.disconnect?.();
+        } catch (error) {
+          this.emit('error', error);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        try {
+          this.peer.destroy?.();
+        } catch (error) {
+          this.emit('error', error);
+        }
+
+        this._id = null;
+        this.peer = null;
+      } catch (error) {
+        this.emit('error', error);
+      }
+    })();
+
+    return this._cleanupPromise;
+  }
+
+  /**
+   * Destroy the peer connection and release all resources.
+   * @returns {Promise<void>}
+   */
+  async destroy() {
+    return this.cleanup();
   }
 
   /**

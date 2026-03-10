@@ -1,12 +1,22 @@
 {
   "name": "peerwormhole",
-  "version": "1.0.0",
-  "description": "Wormhole-style file sharing over PeerJS/WebRTC",
+  "version": "1.1.0",
+  "description": "Peer-to-peer file sharing over PeerJS/WebRTC for CLI and browser",
   "type": "module",
-  "main": "src-js/index.js",
+  "main": "./src-js/index.js",
+  "exports": {
+    ".": "./src-js/index.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "src-js/index.js",
+    "src-js/NodePeer.js",
+    "tests/test.js",
+    "web/"
+  ],
   "bin": {
-    "peerwormhole": "./bin/peerwormhole.js",
-    "peerdrop": "./bin/peerwormhole.js"
+    "peerwormhole": "./bin/peerwormhole.js"
   },
   "scripts": {
     "test": "node tests/test.js",
@@ -26,17 +36,33 @@
     "example:05:cli": "node examples/05-slack-lite/src/cli.js",
     "example:05:web": "node examples/05-slack-lite/src/web.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "keywords": [
     "wormhole",
     "webrtc",
     "peerjs",
-    "node"
+    "file-share",
+    "p2p",
+    "cli",
+    "browser"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Focus-AI/peerwormhole.git"
+  },
+  "bugs": {
+    "url": "https://github.com/The-Focus-AI/peerwormhole/issues"
+  },
+  "homepage": "https://github.com/The-Focus-AI/peerwormhole#readme",
   "dependencies": {
     "@roamhq/wrtc": "^0.9.0",
     "peerjs": "^1.5.4",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "webrtc-adapter": "^9.0.0",
+    "ws": "^8.19.0"
   }
 }

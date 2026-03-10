@@ -1,4 +1,7 @@
 import assert from 'assert/strict';
+import { spawnSync } from 'child_process';
+import { EventEmitter } from 'events';
+import { fileURLToPath } from 'url';
 import { NodeMesh } from '../lib/node/mesh.js';
 import { NodePeer } from '../src-js/NodePeer.js';
 import { SimpleEmitter } from '../lib/common/emitter.js';
@@ -17,6 +20,8 @@ import {
   parseSharePhrase
 } from '../lib/common/share-code.js';
 import { ShareReceiver, ShareSender } from '../lib/common/share-session.js';
+
+const CLI_PATH = fileURLToPath(new URL('../bin/peerwormhole.js', import.meta.url));
 
 class FakeConnection {
   constructor() {
@@ -205,6 +210,58 @@ async function testReceiverOfferAndAccept() {
   receiver.stop();
 }
 
+async function testSubcommandHelp() {
+  const result = spawnSync(process.execPath, [CLI_PATH, 'receive', '--help'], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Usage:/);
+  assert.equal(result.stderr, '');
+}
+
+async function testNodePeerDestroyLifecycle() {
+  const calls = [];
+  const nodePeer = new EventEmitter();
+  Object.setPrototypeOf(nodePeer, NodePeer.prototype);
+  nodePeer._id = 'cleanup-peer';
+  nodePeer._cleanupPromise = null;
+  nodePeer.peer = {
+    destroyed: false,
+    connections: {
+      'remote-peer': [
+        {
+          dataChannel: {
+            close() {
+              calls.push('dataChannel.close');
+            }
+          },
+          close() {
+            calls.push('connection.close');
+          }
+        }
+      ]
+    },
+    disconnect() {
+      calls.push('peer.disconnect');
+    },
+    destroy() {
+      calls.push('peer.destroy');
+      this.destroyed = true;
+    }
+  };
+
+  await nodePeer.destroy();
+
+  assert.deepEqual(calls, [
+    'dataChannel.close',
+    'connection.close',
+    'peer.disconnect',
+    'peer.destroy'
+  ]);
+  assert.equal(nodePeer.getId(), '');
+}
+
 async function testPeerConnection() {
   const peer1 = new NodePeer();
   const peer2 = new NodePeer();
@@ -298,7 +355,9 @@ async function runTests() {
     ['Share code round trip', testShareCodeRoundTrip],
     ['Share code round trip without Buffer', testShareCodeRoundTripWithoutBuffer],
     ['Sender handshake and stream', testSenderHandshakeAndStreaming],
-    ['Receiver offer and accept', testReceiverOfferAndAccept]
+    ['Receiver offer and accept', testReceiverOfferAndAccept],
+    ['Subcommand help', testSubcommandHelp],
+    ['NodePeer destroy lifecycle', testNodePeerDestroyLifecycle]
   ];
 
   if (process.env.RUN_PEER_NETWORK_TEST === '1') {
