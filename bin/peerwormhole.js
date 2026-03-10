@@ -2,7 +2,8 @@
 import os from 'os';
 import readline from 'readline/promises';
 import { mkdir, readFile, writeFile } from 'fs/promises';
-import { basename, join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
 import { createUser, sanitizeFileName } from '../lib/common/protocol.js';
 import { formatBytes, getMimeType } from '../lib/common/format.js';
@@ -16,12 +17,19 @@ const DEFAULT_WEB_BASE_URL =
   process.env.NODE_PEERJS_WEB_BASE_URL ||
   'http://127.0.0.1:3106/';
 
+async function getVersion() {
+  const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+  const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+  return pkg.version;
+}
+
 function printUsage() {
   console.log(`Usage:
-  peerwormhole send <file> [--name <name>] [--web-base-url <url>]
-  peerwormhole receive [code-or-url] [--name <name>] [--output-dir <dir>]
+  peerwormhole send <file> [--name <name>] [--web-base-url <url>] [--verbose]
+  peerwormhole receive [code-or-url] [--name <name>] [--output-dir <dir>] [--verbose]
   peerwormhole web [--port <port>]
   peerwormhole web:export <dir>
+  peerwormhole --version
 `);
 }
 
@@ -33,6 +41,11 @@ function parseArgv(argv) {
     const value = argv[index];
     if (value === '-h') {
       options.help = true;
+      continue;
+    }
+
+    if (value === '-v' || value === '-V') {
+      options.version = true;
       continue;
     }
 
@@ -110,12 +123,20 @@ async function runSend(positionals, options) {
     throw new Error('Missing file path.');
   }
 
+  const verbose = !!options.verbose;
   const absolutePath = resolve(filePath);
   const buffer = await readFile(absolutePath);
   const fileName = basename(absolutePath);
   const mimeType = getMimeType(fileName);
   const user = createUser(getUserName(options, 'CLI Sender'), 'cli');
-  const mesh = new NodeMesh({ user });
+  const debug = verbose ? 2 : 0;
+  const mesh = new NodeMesh({ user, debug });
+
+  if (verbose) {
+    mesh.on('error', (err) => console.error('[verbose] mesh error:', err.message || err));
+  }
+
+  console.log('Connecting to signaling server...');
   const sender = new ShareSender({
     mesh,
     user,
@@ -134,13 +155,18 @@ async function runSend(positionals, options) {
   });
 
   await mesh.start();
+  if (verbose) {
+    console.log('[verbose] Connected to signaling server');
+  }
   const invite = sender.createInvite();
   const webBaseUrl = options['web-base-url'] || DEFAULT_WEB_BASE_URL;
   const shareUrl = createShareUrl(webBaseUrl, invite.code);
   const qr = await renderTerminalQr(shareUrl);
 
   console.log(`Ready to send ${fileName} (${formatBytes(buffer.byteLength)})`);
-  console.log(`Peer ID: ${invite.peerId}`);
+  if (verbose) {
+    console.log(`Peer ID: ${invite.peerId}`);
+  }
   console.log(`Share code: ${invite.code}`);
   console.log('Speak this phrase:');
   console.log(wrapPhrase(invite.phrase));
@@ -179,26 +205,33 @@ async function runReceive(positionals, options) {
     shareInput = (await prompt('Enter the share code, phrase, or URL: ')).trim();
   }
 
+  const verbose = !!options.verbose;
   const parsed = parseShareInput(shareInput);
   const outputDir = resolve(options['output-dir'] || join(process.cwd(), 'downloads'));
   await mkdir(outputDir, { recursive: true });
 
   const user = createUser(getUserName(options, 'CLI Receiver'), 'cli');
-  const mesh = new NodeMesh({ user });
+  const debug = verbose ? 2 : 0;
+  const mesh = new NodeMesh({ user, debug });
   const receiver = new ShareReceiver({ mesh });
   const cleanup = async () => {
     receiver.stop();
     await mesh.stop();
   };
 
+  if (verbose) {
+    mesh.on('error', (err) => console.error('[verbose] mesh error:', err.message || err));
+  }
+
   process.on('SIGINT', async () => {
     await cleanup();
     process.exit(1);
   });
 
+  console.log('Connecting to signaling server...');
   const logReceiveProgress = createProgressLogger('Receiving');
   receiver.on('connected', () => {
-    console.log(`Connected to sender ${parsed.peerId}. Waiting for offer...`);
+    console.log(`Connected to sender. Waiting for offer...`);
   });
   receiver.on('progress', ({ meta, progress }) => {
     logReceiveProgress({
@@ -208,6 +241,10 @@ async function runReceive(positionals, options) {
   });
 
   await mesh.start();
+  if (verbose) {
+    console.log('[verbose] Connected to signaling server');
+  }
+  console.log('Connecting to sender...');
   receiver.connectTo(parsed.peerId);
 
   await new Promise((resolvePromise, reject) => {
@@ -276,6 +313,11 @@ async function runWebExport(positionals) {
 async function main() {
   const { positionals, options } = parseArgv(process.argv.slice(2));
   const command = positionals[0];
+
+  if (options.version || command === 'version') {
+    console.log(`peerwormhole ${await getVersion()}`);
+    return;
+  }
 
   if (!command || command === '--help' || command === 'help' || options.help) {
     printUsage();
