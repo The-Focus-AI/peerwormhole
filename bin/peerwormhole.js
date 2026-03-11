@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import os from 'os';
 import readline from 'readline/promises';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { basename, dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
@@ -73,15 +73,6 @@ function parseArgv(argv) {
 
 function getUserName(options, fallback) {
   return options.name || fallback || os.userInfo().username || 'CLI User';
-}
-
-function wrapPhrase(phrase) {
-  const words = phrase.split(' ');
-  const rows = [];
-  for (let index = 0; index < words.length; index += 4) {
-    rows.push(words.slice(index, index + 4).join(' '));
-  }
-  return rows.join('\n');
 }
 
 function createProgressLogger(prefix) {
@@ -167,9 +158,7 @@ async function runSend(positionals, options) {
   if (verbose) {
     console.log(`Peer ID: ${invite.peerId}`);
   }
-  console.log(`Share code: ${invite.code}`);
-  console.log('Speak this phrase:');
-  console.log(wrapPhrase(invite.phrase));
+  console.log(`\nnpx peerwormhole@latest receive ${invite.code}\n`);
   console.log(`Share URL: ${shareUrl}`);
   console.log('QR code:');
   console.log(qr);
@@ -207,8 +196,7 @@ async function runReceive(positionals, options) {
 
   const verbose = !!options.verbose;
   const parsed = parseShareInput(shareInput);
-  const outputDir = resolve(options['output-dir'] || join(process.cwd(), 'downloads'));
-  await mkdir(outputDir, { recursive: true });
+  const outputDir = resolve(options['output-dir'] || process.cwd());
 
   const user = createUser(getUserName(options, 'CLI Receiver'), 'cli');
   const debug = verbose ? 2 : 0;
@@ -269,7 +257,7 @@ async function runReceive(positionals, options) {
     });
 
     receiver.on('complete', async ({ meta, bytes }) => {
-      const targetPath = join(outputDir, `${Date.now()}-${sanitizeFileName(meta.name)}`);
+      const targetPath = join(outputDir, sanitizeFileName(meta.name));
       await writeFile(targetPath, bytes);
       console.log(`Saved ${meta.name} to ${targetPath}`);
       await cleanup();
