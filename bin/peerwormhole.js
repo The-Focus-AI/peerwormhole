@@ -176,10 +176,10 @@ async function runSend(positionals, options) {
   console.log('Waiting for a receiver...');
 
   sender.on('offer', ({ peerId }) => {
-    console.log(`Receiver connected: ${peerId}`);
+    console.log(`Receiver connected${verbose ? ': ' + peerId : ''}`);
   });
   sender.on('accepted', ({ peerId, user: receiverUser }) => {
-    console.log(`Receiver accepted: ${receiverUser?.name || peerId}`);
+    console.log(`Receiver accepted. Sending...`);
   });
   sender.on('rejected', ({ reason }) => {
     console.log(`Receiver declined: ${reason}`);
@@ -187,8 +187,8 @@ async function runSend(positionals, options) {
   sender.on('progress', createProgressLogger('Sending'));
 
   await new Promise((resolvePromise, reject) => {
-    sender.on('complete', async ({ peerId }) => {
-      console.log(`Transfer complete to ${peerId}`);
+    sender.on('complete', async () => {
+      console.log('Transfer complete.');
       await cleanup();
       resolvePromise();
     });
@@ -259,7 +259,13 @@ async function runReceive(positionals, options) {
       }
 
       receiver.accept();
-      console.log('Transfer accepted.');
+      console.log('Transfer accepted. Receiving...');
+    });
+
+    receiver.on('transfer-start', ({ meta }) => {
+      if (verbose) {
+        console.log(`[verbose] Transfer started: ${meta.name} (${meta.totalChunks} chunks)`);
+      }
     });
 
     receiver.on('complete', async ({ meta, bytes }) => {

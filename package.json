@@ -1,6 +1,6 @@
 {
   "name": "peerwormhole",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Peer-to-peer file sharing over PeerJS/WebRTC for CLI and browser",
   "type": "module",
   "main": "./src-js/index.js",
@@ -16,7 +16,7 @@
     "web/"
   ],
   "bin": {
-    "peerwormhole": "./bin/peerwormhole.js"
+    "peerwormhole": "bin/peerwormhole.js"
   },
   "scripts": {
     "test": "node tests/test.js",
